@@ -1,4 +1,4 @@
-/* 1. Покажіть середню зарплату співробітників за кожен рік, до 2005 року. */
+/* 1. Show the average salary of employees for each year, up to 2005. */
 SELECT 
     YEAR(from_date) AS report_year, 
     ROUND(AVG(salary),2) AS average_salary
@@ -11,7 +11,7 @@ HAVING
 ORDER BY 
     report_year;
     
-/* 2. Покажіть середню зарплату співробітників по кожному відділу. Примітка: потрібно розрахувати по поточній зарплаті, та поточному відділу співробітників */
+/* 2. Show the average salary of employees for each department. */
 SELECT 
     d.dept_name AS department_name,
     ROUND(AVG(s.salary),2) AS average_salary
@@ -29,7 +29,7 @@ GROUP BY
 ORDER BY 
     average_salary DESC;
     
-/* 3. Покажіть середню зарплату співробітників по кожному відділу за кожний рік */
+/* 3. Show the average salary of employees for each department for each year. */
 SELECT 
     d.dept_name AS department_name,
     YEAR(s.from_date) AS year_,
@@ -45,7 +45,7 @@ GROUP BY
 ORDER BY 
     department_name, year_;
     
-/* 4. Покажіть відділи в яких зараз працює більше 15000 співробітників. */
+/* 4.Show the departments that currently have more than 15000 employees. */
 SELECT 
     d.dept_name AS department_name,
     COUNT(de.emp_no) AS employee_count
@@ -62,7 +62,7 @@ HAVING
 ORDER BY 
     employee_count;
     
-/* 5. Для менеджера який працює найдовше покажіть його номер, відділ, дату прийому на роботу, прізвище */
+/* 5. For the longest-serving manager, show their ID, department, hire date, and last name.*/
 
 SELECT dm.emp_no, d.dept_name, e.hire_date, e.last_name
 
@@ -80,8 +80,8 @@ ORDER BY TIMESTAMPDIFF(DAY, e.hire_date, CURRENT_DATE()) DESC
 
 LIMIT 1;
 
-/* 6. Покажіть топ-10 діючих співробітників компанії з найбільшою різницею між їх зарплатою і середньою зарплатою в їх відділі.*/
--- Перший CTE для обчислення середньої зарплати по кожному відділу
+/* 6. Show the top 10 current employees of the company with the largest difference between their salary and the average salary in their department.*/
+-- The first CTE to calculate the average salary for each department.
  WITH DepartmentAvgSalaries AS (
     SELECT 
         de.dept_no,                     
@@ -91,12 +91,12 @@ LIMIT 1;
     INNER JOIN 
         salaries s ON de.emp_no = s.emp_no 
     WHERE 
-        CURRENT_DATE() BETWEEN de.from_date AND de.to_date  -- умова по даті для dept_emp
-        AND CURRENT_DATE() BETWEEN s.from_date AND s.to_date  -- умова по даті для salaries    
+        CURRENT_DATE() BETWEEN de.from_date AND de.to_date  
+        AND CURRENT_DATE() BETWEEN s.from_date AND s.to_date      
     GROUP BY 
         de.dept_no                     
 ),
--- Другий CTE для обчислення зарплат і різниці від середньої зарплати
+-- The second CTE for calculating salaries and the difference from the average salary.
 EmployeeSalaryDifferences AS (
     SELECT 
         e.emp_no,                        
@@ -114,10 +114,10 @@ EmployeeSalaryDifferences AS (
     INNER JOIN 
         DepartmentAvgSalaries ds ON de.dept_no = ds.dept_no 
     WHERE 
-        CURRENT_DATE() BETWEEN de.from_date AND de.to_date  -- умова по даті для dept_emp
-        AND CURRENT_DATE() BETWEEN s.from_date AND s.to_date  -- умова по даті для salaries           
+        CURRENT_DATE() BETWEEN de.from_date AND de.to_date  
+        AND CURRENT_DATE() BETWEEN s.from_date AND s.to_date             
 )
-SELECT -- Основний запит для вибору топ-10 співробітників з найбільшою різницею в зарплатах
+SELECT -- Main query to select the top 10 employees with the largest salary differences.
     emp_no,                            
     full_name,                        
     salary,                            
@@ -128,8 +128,8 @@ ORDER BY
     difference DESC                         
 LIMIT 10; 
 
-/*  7. Для кожного відділу покажіть другого по порядку менеджера. Необхідно вивести відділ, прізвище ім’я менеджера, 
-дату прийому на роботу менеджера і дату коли він став менеджером відділу*/
+/*  7. For each department, show the second manager in order. 
+It is necessary to display the department, the last name and first name of the manager, the date the manager was hired, and the date when he became the manager of the department.*/
 WITH scnd_mng AS (
   SELECT dm.dept_no, dm.emp_no, dm.from_date, 
            ROW_NUMBER() OVER (PARTITION BY dm.dept_no ORDER BY dm.from_date) AS rnk
